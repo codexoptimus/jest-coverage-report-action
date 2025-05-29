@@ -1,6 +1,7 @@
 import * as all from '@actions/github';
 
 import { createReport, getSha } from '../../src/stages/createReport';
+import { createRunReport } from '../../src/stages/createRunReport';
 import { JsonReport } from '../../src/typings/JsonReport';
 import { Options } from '../../src/typings/Options';
 import { createDataCollector } from '../../src/utils/DataCollector';
@@ -18,8 +19,16 @@ const DEFAULT_OPTIONS: Options = {
     prNumber: 5,
     pullRequest: {
         number: 5,
-        head: { sha: '123456', ref: '123' },
-        base: { ref: '456' },
+        head: {
+            sha: '123456',
+            ref: '123',
+            repo: { clone_url: 'https://github.com/test/repo.git' },
+        },
+        base: {
+            sha: '256',
+            ref: '456',
+            repo: { clone_url: 'https://github.com/test/repo.git' },
+        },
     },
     output: ['comment'],
 };
@@ -33,6 +42,7 @@ describe('createReport', () => {
         expect(
             await createReport(
                 dataCollector,
+                createRunReport(report),
                 {
                     ...DEFAULT_OPTIONS,
                     workingDirectory: 'custom directory',
@@ -41,12 +51,18 @@ describe('createReport', () => {
             )
         ).toMatchSnapshot();
         expect(
-            await createReport(dataCollector, DEFAULT_OPTIONS, [])
+            await createReport(
+                dataCollector,
+                createRunReport(report),
+                DEFAULT_OPTIONS,
+                []
+            )
         ).toMatchSnapshot();
 
         expect(
             await createReport(
                 dataCollector,
+                createRunReport(report),
                 {
                     ...DEFAULT_OPTIONS,
                     workingDirectory: 'directory',
@@ -66,7 +82,12 @@ describe('createReport', () => {
         mockContext({ payload: { after: '123456' } });
 
         expect(
-            await createReport(dataCollector, DEFAULT_OPTIONS, [])
+            await createReport(
+                dataCollector,
+                createRunReport({ ...report, success: false }),
+                DEFAULT_OPTIONS,
+                []
+            )
         ).toMatchSnapshot();
 
         clearContextMock();

@@ -5,9 +5,6 @@ import { GITHUB_MESSAGE_SIZE_LIMIT } from '../constants/GITHUB_MESSAGE_SIZE_LIMI
 import { formatCoverage } from '../format/formatCoverage';
 import { formatErrors } from '../format/formatErrors';
 import { formatRunReport } from '../format/formatRunReport';
-import { formatThresholdResults } from '../format/formatThresholdResults';
-import { getFailureDetails } from '../format/getFailureDetails';
-import { getTestRunSummary } from '../format/summary/getTestRunSummary';
 import template from '../format/template.md';
 import { JsonReport } from '../typings/JsonReport';
 import { Options } from '../typings/Options';
@@ -24,6 +21,7 @@ export const getSha = () =>
 
 export const createReport = (
     dataCollector: DataCollector<JsonReport>,
+    runReport: TestRunReport | undefined,
     options: Options,
     thresholdResults: ThresholdResult[]
 ): SummaryReport => {
@@ -31,24 +29,19 @@ export const createReport = (
 
     const { errors, data } = dataCollector.get();
     const [headReport, baseReport] = data;
-    const formattedErrors = formatErrors(errors);
+    const formattedErrors = formatErrors(
+        errors,
+        headReport.numFailedTests !== 0 ||
+            headReport.numFailedTestSuites !== 0 ||
+            headReport.numRuntimeErrorTestSuites !== 0,
+        thresholdResults
+    );
 
-    const formattedThresholdResults = formatThresholdResults(thresholdResults);
     const coverage = formatCoverage(headReport, baseReport, undefined, false);
-    const runReport: TestRunReport = {
-        title: i18n(headReport.success ? 'testsSuccess' : 'testsFail'),
-        summary: getTestRunSummary(headReport),
-        failures: getFailureDetails(headReport),
-    };
-    const formattedReport = formatRunReport(runReport);
+    const formattedReport = runReport ? formatRunReport(runReport) : '';
 
     let templateText = insertArgs(template, {
-        body: [
-            formattedErrors,
-            formattedThresholdResults,
-            coverage,
-            formattedReport,
-        ].join('\n'),
+        body: [formattedErrors, coverage, formattedReport].join('\n'),
         dir: workingDirectory || '',
         tag: getReportTag(options),
         title: insertArgs(customTitle || i18n('summaryTitle'), {
@@ -66,12 +59,9 @@ export const createReport = (
         );
 
         templateText = insertArgs(template, {
-            body: [
-                formattedErrors,
-                formattedThresholdResults,
-                reducedCoverage,
-                formattedReport,
-            ].join('\n'),
+            body: [formattedErrors, reducedCoverage, formattedReport].join(
+                '\n'
+            ),
             dir: workingDirectory || '',
             tag: getReportTag(options),
             title: insertArgs(customTitle || i18n('summaryTitle'), {
@@ -79,10 +69,23 @@ export const createReport = (
             }),
             sha: getSha(),
         });
+
+        if (templateText.length > GITHUB_MESSAGE_SIZE_LIMIT) {
+            templateText = insertArgs(template, {
+                body: insertArgs('> {{ text }}', {
+                    text: i18n('errors.reportGenerationError'),
+                }),
+                dir: workingDirectory || '',
+                tag: getReportTag(options),
+                title: insertArgs(customTitle || i18n('summaryTitle'), {
+                    dir: workingDirectory ? `for \`${workingDirectory}\`` : '',
+                }),
+                sha: getSha(),
+            });
+        }
     }
 
     return {
         text: templateText,
-        runReport,
     };
 };

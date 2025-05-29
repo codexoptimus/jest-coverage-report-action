@@ -255,6 +255,61 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "vikasperi",
+      "name": "vikasperi",
+      "avatar_url": "https://avatars.githubusercontent.com/u/117131235?v=4",
+      "profile": "https://github.com/vikasperi",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "hyperair",
+      "name": "Chow Loong Jin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/88355?v=4",
+      "profile": "https://github.com/hyperair",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    },
+    {
+      "login": "aj8k",
+      "name": "Anton Joy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1395376?v=4",
+      "profile": "https://github.com/aj8k",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ddlan",
+      "name": "Danny Lan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25760929?v=4",
+      "profile": "http://www.dannylan.me",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "coopbri",
+      "name": "Brian Cooper",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20056195?v=4",
+      "profile": "https://brian-cooper.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "syossan27",
+      "name": "syossan27",
+      "avatar_url": "https://avatars.githubusercontent.com/u/910446?v=4",
+      "profile": "http://d.hatena.ne.jp/syossan/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "jest-coverage-report-action",
@@ -262,5 +317,7 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "skipCi": true,
-  "contributorsPerLine": 7
+  "contributorsPerLine": 7,
+  "commitConvention": "angular",
+  "commitType": "docs"
 }

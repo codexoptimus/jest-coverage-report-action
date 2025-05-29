@@ -14,16 +14,14 @@ const getLocation = (
     start_column?: number;
     end_column?: number;
 } => ({
-    start_line: start.line,
-    end_line: end.line,
-    start_column:
-        start.line === end.line && start.column !== null && end.column !== null
-            ? start.column
-            : undefined,
-    end_column:
-        start.line === end.line && start.column !== null && end.column !== null
-            ? end.column
-            : undefined,
+    start_line: Math.min(start.line, end.line),
+    end_line: Math.max(end.line),
+    ...(start.line === end.line && start.column != null && end.column != null
+        ? {
+              start_column: Math.max(1, Math.min(start.column, end.column)),
+              end_column: Math.max(1, start.column, end.column),
+          }
+        : {}),
 });
 
 export const createCoverageAnnotations = (
@@ -34,9 +32,14 @@ export const createCoverageAnnotations = (
     Object.entries(jsonReport.coverageMap).forEach(
         ([fileName, fileCoverage]) => {
             const normalizedFilename = relative(process.cwd(), fileName);
-            Object.entries(fileCoverage.statementMap).forEach(
+            const normalizedFileCoverage =
+                'statementMap' in fileCoverage
+                    ? fileCoverage
+                    : fileCoverage.data;
+
+            Object.entries(normalizedFileCoverage.statementMap).forEach(
                 ([statementIndex, statementCoverage]) => {
-                    if (fileCoverage.s[+statementIndex] === 0) {
+                    if (normalizedFileCoverage.s[+statementIndex] === 0) {
                         annotations.push({
                             ...getLocation(
                                 statementCoverage.start,
@@ -51,13 +54,13 @@ export const createCoverageAnnotations = (
                 }
             );
 
-            Object.entries(fileCoverage.branchMap).forEach(
+            Object.entries(normalizedFileCoverage.branchMap).forEach(
                 ([branchIndex, branchCoverage]) => {
                     if (branchCoverage.locations) {
                         branchCoverage.locations.forEach(
                             (location, locationIndex) => {
                                 if (
-                                    fileCoverage.b[+branchIndex][
+                                    normalizedFileCoverage.b[+branchIndex][
                                         locationIndex
                                     ] === 0
                                 ) {
@@ -80,9 +83,9 @@ export const createCoverageAnnotations = (
                 }
             );
 
-            Object.entries(fileCoverage.fnMap).forEach(
+            Object.entries(normalizedFileCoverage.fnMap).forEach(
                 ([functionIndex, functionCoverage]) => {
-                    if (fileCoverage.f[+functionIndex] === 0) {
+                    if (normalizedFileCoverage.f[+functionIndex] === 0) {
                         annotations.push({
                             ...getLocation(
                                 functionCoverage.decl.start,

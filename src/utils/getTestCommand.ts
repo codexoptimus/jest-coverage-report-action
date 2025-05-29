@@ -1,4 +1,24 @@
+import { exec } from '@actions/exec';
+import semver from 'semver';
+
 import { isOldScript } from './isOldScript';
+
+const checkPnpmVersion = async () => {
+    try {
+        let versionStr = '';
+        await exec('pnpm -v', undefined, {
+            listeners: {
+                stdout: (data) => {
+                    versionStr += data.toString();
+                },
+            },
+        });
+
+        return semver.satisfies(versionStr.trim(), '< 7.0.0');
+    } catch (error) {
+        return true;
+    }
+};
 
 export const getTestCommand = async (
     command: string,
@@ -10,15 +30,17 @@ export const getTestCommand = async (
         return command;
     }
 
-    const isNpmStyle = command.startsWith('npm') || command.startsWith('pnpm');
+    const isNpmStyle =
+        command.startsWith('npm') ||
+        (command.startsWith('pnpm') && (await checkPnpmVersion()));
 
-    const hasDoubleHyhen = command.includes(' -- ');
+    const hasDoubleHyphen = command.includes(' -- ');
 
     // building new command
     const newCommandBuilder: (string | boolean)[] = [
         command,
         // add two hypens if it is npm or pnpm package managers and two hyphens don't already exist
-        isNpmStyle && !hasDoubleHyhen && '--',
+        isNpmStyle && !hasDoubleHyphen && '--',
         // argument which indicates that jest runs in CI environment
         '--ci',
         // telling jest that output should be in json format
